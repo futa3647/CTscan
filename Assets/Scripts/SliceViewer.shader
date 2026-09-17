@@ -2,11 +2,10 @@ Shader "Custom/SliceViewer"
 {
     Properties
     {
-        // DICOMのTexture3D
         _VolumeTex ("Volume Texture", 3D) = "" {}
 
-        // 表示するZスライス
-        _SlicePosition ("Slice Position", Range(0, 1)) = 0
+        _StartSlice ("Start Slice", Range(0, 1)) = 0
+        _EndSlice ("End Slice", Range(0, 1)) = 1
     }
 
     SubShader
@@ -21,8 +20,6 @@ Shader "Custom/SliceViewer"
         Pass
         {
             Name "SliceViewer"
-
-            // 両面表示
             Cull Off
 
             HLSLPROGRAM
@@ -32,7 +29,6 @@ Shader "Custom/SliceViewer"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            // 頂点情報
             struct Attributes
             {
                 float4 positionOS : POSITION;
@@ -45,52 +41,56 @@ Shader "Custom/SliceViewer"
                 float2 uv : TEXCOORD0;
             };
 
-            // Texture3D
             TEXTURE3D(_VolumeTex);
             SAMPLER(sampler_VolumeTex);
 
-            // Materialの値
             CBUFFER_START(UnityPerMaterial)
-                float _SlicePosition;
+
+                float _StartSlice;
+                float _EndSlice;
+
             CBUFFER_END
 
-            // 頂点シェーダー
             Varyings vert(Attributes input)
             {
                 Varyings output;
 
                 output.positionHCS =
                     TransformObjectToHClip(
-                        input.positionOS.xyz);
+                        input.positionOS.xyz
+                    );
 
                 output.uv = input.uv;
 
                 return output;
             }
 
-            // ピクセルシェーダー
             float4 frag(Varyings input) : SV_Target
             {
-                // PlaneのUVをTexture3DのXYとして使用
                 float3 uvw;
 
                 uvw.x = input.uv.x;
                 uvw.y = input.uv.y;
-                uvw.z = _SlicePosition;
 
-                // Texture3Dから画素を取得
+                // 範囲の中央を取得
+                float slicePosition =
+                    (_StartSlice + _EndSlice) * 0.5;
+
+                uvw.z = slicePosition;
+
                 float density =
                     SAMPLE_TEXTURE3D(
                         _VolumeTex,
                         sampler_VolumeTex,
-                        uvw).r;
+                        uvw
+                    ).r;
 
-                // 白黒で表示
                 return float4(
                     density,
                     density,
                     density,
-                    1.0);
+                    1.0
+                );
             }
 
             ENDHLSL

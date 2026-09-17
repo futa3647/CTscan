@@ -2,71 +2,52 @@ using UnityEngine;
 
 public class DICOMSliceViewer : MonoBehaviour
 {
-    // Texture3D
     public Texture3D volumeTexture;
 
-    // 表示するスライス番号
+    [Header("表示・判定するZ範囲")]
     [Range(0, 550)]
-    public int sliceIndex = 0;
+    public int startSlice = 100;
 
-    // 前回のスライス番号
-    private int lastSliceIndex = -1;
+    [Range(0, 550)]
+    public int endSlice = 150;
 
-    // 表示用Renderer
     private Renderer targetRenderer;
-
-    // 使用するMaterial
     private Material material;
 
     void Start()
     {
         targetRenderer = GetComponent<Renderer>();
-
         material = targetRenderer.material;
 
-        material.SetTexture(
-            "_VolumeTex",
-            volumeTexture);
+        material.SetTexture("_VolumeTex", volumeTexture);
 
-        UpdateSlice();
+        UpdateSliceRange();
     }
 
     void Update()
     {
-        if (sliceIndex != lastSliceIndex)
-        {
-            UpdateSlice();
-        }
+        UpdateSliceRange();
     }
 
-    // スライスを更新
-    void UpdateSlice()
+    void UpdateSliceRange()
     {
         if (volumeTexture == null || material == null)
-        {
             return;
-        }
 
-        float slicePosition = 0.0f;
+        int minSlice = Mathf.Min(startSlice, endSlice);
+        int maxSlice = Mathf.Max(startSlice, endSlice);
 
-        if (volumeTexture.depth > 1)
-        {
-            slicePosition =
-                 1.0f -
-                 (float)sliceIndex /
-                 (volumeTexture.depth - 1);
-        }
+        float startPosition =
+            1.0f -
+            (float)minSlice /
+            (volumeTexture.depth - 1);
 
-        slicePosition = Mathf.Clamp01(slicePosition);
+        float endPosition =
+            1.0f -
+            (float)maxSlice /
+            (volumeTexture.depth - 1);
 
-        material.SetFloat(
-            "_SlicePosition",
-            slicePosition);
-
-        lastSliceIndex = sliceIndex;
-
-        Debug.Log(
-            "Slice Index: " + sliceIndex +
-            " / Slice Position: " + slicePosition);
+        material.SetFloat("_StartSlice", startPosition);
+        material.SetFloat("_EndSlice", endPosition);
     }
 }

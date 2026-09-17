@@ -89,7 +89,7 @@ public class Texture2DArrayToTexture3DConverterEditor : Editor
                 converter.texture2DArray);
 
         // スライス順を反転
-        textures.Reverse();
+        //textures.Reverse();
 
         int width =
             textures[0].width;

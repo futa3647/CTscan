@@ -135,7 +135,7 @@ Shader "Custom/VolumeRendering"
                             sampler_VolumeTex,
                             uv).r;
 
-                    if (density > _Threshold)
+if (density > _Threshold)
 {
     // 濃度を0～1に正規化
     float value = saturate(
@@ -143,33 +143,11 @@ Shader "Custom/VolumeRendering"
         (1.0 - _Threshold)
     );
 
-    // 青 → 緑 → 黄 → 赤
-    float3 color;
-
-    if (value < 0.33)
-    {
-        color = lerp(
-            float3(0, 0, 1),
-            float3(0, 1, 0),
-            value / 0.33
-        );
-    }
-    else if (value < 0.66)
-    {
-        color = lerp(
-            float3(0, 1, 0),
-            float3(1, 1, 0),
-            (value - 0.33) / 0.33
-        );
-    }
-    else
-    {
-        color = lerp(
-            float3(1, 1, 0),
-            float3(1, 0, 0),
-            (value - 0.66) / 0.34
-        );
-    }
+    // 白黒の濃淡
+    // 0 = 黒
+    // 1 = 白
+    float3 color =
+        float3(value, value, value);
 
     float alpha =
         value *
